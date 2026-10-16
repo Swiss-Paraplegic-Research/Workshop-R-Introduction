@@ -1,0 +1,330 @@
+\documentclass[a4paper, hidelinks]{article}
+
+\usepackage[margin=3cm]{geometry}
+\usepackage[english]{babel}   % Can switch to german
+\usepackage[utf8x]{inputenc}
+\usepackage{natbib}
+\bibliographystyle{apalike}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+% Uncomment next three lines to not show subsection title in header:
+%\fancyhf{}
+%\fancyhead[R]{\leftmark}
+%\fancyfoot[C]{\thepage}   % To keep pagenumber
+
+
+\usepackage{float}
+\usepackage{hyperref}
+%\usepackage{caption}
+%\usepackage{subcaption}
+%\usepackage{longtable}
+%\usepackage[section]{placeins}   % Uncomment so floats do not jump sections (can also add manual float-barrier in text with \FloatBarrier)
+
+
+% With \tcell one can create a box inside a table to write text over multiple lines, can also force line break. Takes two arguments: Boxwidth and text to be printed. Apparently does not work with Rmarkdown.
+\newcommand{\tcell}[2][4cm]{%
+\setlength{\fboxsep}{3pt}%
+\setlength{\fboxrule}{0pt}%
+\fbox{\parbox[t]{#1}{#2}}%
+}
+% Command to have a fixed column width when using tcell:
+\newcommand{\tcW}{3cm}
+
+
+% TitleInfo:
+\title{RSweave example}
+\author{Yannick Rothacher}
+
+
+%--------------------------------------------------
+%--------------------------------------------------
+%--------------------------------------------------
+\begin{document}
+\maketitle
+\tableofcontents
+
+\section{First section}
+
+Lets analyze the \texttt{iris} data:
+
+<<echo=FALSE>>=
+lmfit <- lm(Sepal.Length ~ Species, data = iris)
+summary(lmfit)
+@
+
+
+\subsection{Results in a table}
+We want to show the results in a table. We can print R data frames (or matrices) as tables. As an example, see the following Table \ref{coeftable}.
+
+<<results='asis', echo=FALSE>>=
+library(xtable)
+sumy <- summary(lmfit)
+coeftbl <- data.frame(apply(sumy$coefficients, 2, round, digits=2), 
+                      check.names = FALSE)
+### print table:
+print(xtable(coeftbl, caption = 'Results of my linear model', label = 'coeftable'), 
+      include.rownames=FALSE, table.placement="H")
+#' One needs to add sanitize.text.function = function(x){x} in the print call if 
+#' there are latex commands that should be executed inside the table.
+@
+
+\subsection{Adding a figure}
+
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig.dim = c(9, 6)>>=
+### R plot:
+boxplot(Sepal.Length ~ Species, data = iris)
+@
+\caption{This is an iris data boxplot.}
+\label{boxplot1}
+\end{figure}
+
+As can be seen in Figure \ref{boxplot1}, there is a clear difference between species.
+
+
+\section{Adding a figure from a file}
+<< echo=FALSE, results='hide'>>=
+### Create figure file:
+jpeg(filename = './boxplot.jpeg', width = 10, height = 10, units = 'cm', 
+     pointsize = 10, res = 300)
+boxplot(Sepal.Length ~ Species, data = iris, col='blue')
+dev.off()
+@
+
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0cm}\fbox{\includegraphics[width=0.75\columnwidth]{boxplot.jpeg}}
+\caption{This is again a boxplot.}
+\label{boxplotblue}
+\end{figure}
+
+
+Figure \ref{boxplotblue} shows a blue boxplot.
+
+
+\section{Adding references}
+
+As shown in a recent study \citep{zakharova2026pressure}, there is reason to believe...There were two other studies \citep{zakharova2026pressure, tanabe1996diversity} which showed that...Here's an example of having a reference in the text, as was first shown by \citet{zakharova2026pressure}.
+
+\newpage
+
+\bibliography{example.bib}
+\end{document}
+
+
+%--------------------------------------------------
+%--------------------------------------------------
+%--------------------------------------------------
+% How to insert R-figure:
+\begin{figure}[H]
+\centering
+<<echo=FALSE, fig.dim = c(4, 3)>>=
+#' Because I always forget how to do this, I will also add a text with bold
+#' parts in it to this example.
+mytxt1 <- 'this is '
+mytxt2 <- 'bold'
+bq <- bquote('Just use the * sign to concatenate strings in expression: ' * .(mytxt1) * bold(.(mytxt2)))
+### R plot:
+plot(1:5)
+text(x = 3, y=2, labels=bq)
+@
+\caption{CAPTION}
+\label{FIGLABEL}
+\end{figure}
+
+%--------------------------------------------------
+% How to insert figure:
+\begin{figure}[H]
+\centering
+\setlength{\fboxrule}{0cm}\fbox{\includegraphics[width=0.75\columnwidth]{FIGNAME}}
+\caption{CAPTION}
+\label{FIGLABEL}
+\end{figure}
+
+% How to insert multiple images as subfigures:
+% Uncomment the packages caption and subcaption in the preamble.
+\begin{figure}[H]
+     \centering
+     \begin{subfigure}[b]{0.3\columnwidth}
+         \centering
+         \includegraphics[width=\columnwidth]{FIGNAME1}
+         \caption{CAPTION1}
+         \label{FIGLABEL1}
+     \end{subfigure}
+     \hfill   % To add space between images
+     \begin{subfigure}[b]{0.3\columnwidth}
+         \centering
+         \includegraphics[width=\columnwidth]{FIGNAME2}
+         \caption{CAPTION2}
+         \label{FIGLABEL2}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.3\columnwidth}
+         \centering
+         \includegraphics[width=\columnwidth]{FIGNAME3}
+         \caption{CAPTION3}
+         \label{FIGLABEL3}
+     \end{subfigure}
+        \caption{CAPTION}
+        \label{FIGLABEL}
+\end{figure}
+
+%--------------------------------------------------
+% How to insert a table:
+% Table example (Use longtable package for tables over multiple pages, see example below):
+\begin{table}[H]
+\caption{CAPTION}
+\label{TABLABEL}
+\centering\medskip
+\begin{tabular}{|rcl|}
+\hline
+\textbf{Right} & \textbf{Center} & \tcell[\tcW]{\textbf{tcell}}\\ \hline
+a  & b  & \tcell[\tcW]{And here we go, so what do you think?}\\ \hline
+c  & d  & \tcell[\tcW]{First \\ Second \\ Third}\\ \hline
+\end{tabular}
+\end{table}
+
+%--------------------------------------------------
+% How to insert a longtable:
+% Uncomment \usepackage{longtable} in preamble.
+% You can also use my \tcell command in a longtable.
+\begin{center}
+\begin{longtable}{|c|c|c|c|}
+\caption{CAPTION} \label{TABLABEL}\\
+\hline
+\textbf{First entry} & \textbf{Second entry} & \textbf{Third entry} & \textbf{Fourth entry} \\
+\hline
+\endfirsthead   % Top row shown only on first page
+\multicolumn{4}{c}%
+{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+\hline
+\textbf{First entry} & \textbf{Second entry} & \textbf{Third entry} & \textbf{Fourth entry} \\
+\hline
+\endhead   % Top row shown on pages except first
+\hline \multicolumn{4}{r}{\textit{Continued on next page}} \\
+\endfoot   % Bottom row shown on pages except last
+\hline
+\endlastfoot   % Bottom row shown on last page
+1 & 2 & 3 & \tcell[\tcW]{Multiline input using tcell command} \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\ 1 & 2 & 3 & 4 \\
+\end{longtable}
+\end{center}
+
+%--------------------------------------------------
+% For dataframe-to-table use xtable:
+% Simple xtable example:
+<<results='asis', echo=FALSE>>=
+library(xtable)
+print(xtable(iris[1:20, 1:3], caption = 'CAPTION', label = 'TABLABEL'), include.rownames=FALSE, table.placement="H")
+#' One needs to add sanitize.text.function = function(x){x} in the print call if 
+#' there are latex commands that should be executed inside the table.
+@
+
+
+% Complex xtable example including line breaks, column widths, bold text, struts and longtable format with differing headers footers on subsequent pages, and also custom made caption placement (Set if-statements to TRUE/FALSE to see effects):
+<<results='hide', echo=FALSE>>=
+library(xtable)
+### Some random data frame:
+d <- data.frame(Item = c('Can you get out of bed without help?', 'Do your knees hurt when you walk for 30 minutes?', 'Do you ever worry?'), 
+                Frequency = paste0(as.integer(c(10, 20, 50)), '\\%'), 
+                Importance = as.integer(c(100, 40, 80)))   # Always need double \\ to escape the latex slashes
+### Add subtitles (including bold text and line breaks):
+if(TRUE){
+  subtitl <- paste0('\\textbf{Item', 1:nrow(d), '}\\\\')
+  subt_added <- paste(subtitl, d$Item, sep = '')
+  d$Item <- subt_added   # As can see, messes up vertical lines in table (fix with tcells)
+}
+### Add rulers/struts for more spaces between rows:
+if(TRUE){
+  upstrut <- '\\rule[0pt]{1pt}{1em}'
+  downstrut <- '\\rule[-1em]{1pt}{1em}'
+  d$Item <- paste(upstrut, d$Item, downstrut, sep = '')
+  #' Change the widths of the struts to 0pt (first curly brackets) to make invisible.
+}
+### Have bold column names
+if(TRUE){
+  colnames(d) <- paste0('\\textbf{', colnames(d), '}')
+}
+### Put everything into tcells (makes everything behave more controlled):
+if(TRUE){
+  cnms <- colnames(d)
+  cwdt <- paste0(rep(3, ncol(d)), 'cm')   # Columnwidth (Change vector of widths)
+  ### Loop through columns:
+  for(i in 1:length(cnms)){
+    d[, cnms[i]] <-  paste0('\\tcell[', cwdt[i],']{', d[, cnms[i]], '}')   # Values
+    colnames(d)[i] <- paste0('\\tcell[', cwdt[i],']{', colnames(d)[i], '}')   # Columnnames
+  }
+}
+### See as multiple page table:
+if(TRUE){
+  d <- d[rep(1:nrow(d), 10),]
+}
+### Align table:
+dxtbl <- xtable(d, 
+                align = c('l', rep('|c', ncol(d)), '|'))   # Can also set widths here with e.g. 'p{2in}', need to have one for rownames, too
+### Having separate header or footer on subsequent pages:
+#' We can use the add row trick of the print.xtable function to manually add 
+#' rows to the latex text of the function. Check the help page to see how it
+#' works. I will also use this function to manually add the label command at the
+#' top because it is placed per default at the bottom which can have visual effects
+#' on the table when the caption is placed at the top using caption.pacement in 
+#' print function.
+### Table label and caption (change here):
+lbl <- 'MYTABLE'
+cpt <- 'CAPTION'
+lbl_cpt <- paste0('\\\\caption{', cpt, '}  \\\\label{', lbl, '}\\\\\\\\')   # Need double-double slashes because will be added later manually and aparently need to escape twice :/
+### Add caption on top or bottom?:
+#' There is also an argument in the print.xtable function for caption placement but
+#' it messes up the label command, this is why I do it manually.
+cpt_pos <- c('top', 'bottom')
+cpt_pos <- cpt_pos[1]   # Change here what you want (if you dont want a caption then have to remove it above from caption string)
+### Header (and footer) for multiple pages:
+repeat_header1 <- paste0('\\multicolumn{', ncol(d), '}{r}{\\tablename\\ \\thetable\\ -- \\textit{Continued from previous page}} \\\\\n\\hline')   # First part of subsequent-pages header
+repeat_header2 <- paste0(paste(colnames(d), collapse = '&'), '\\\\\n\\hline')   # Second part of subsequent-pages header
+first_foot <- paste0('\\multicolumn{', ncol(d), '}{r}{\\textit{Continued on next page}} \\\\\n')   # Footer before last page
+### Put everything together in right format:
+repeat_header_comm <- paste0("\\endfirsthead\n", repeat_header1, repeat_header2, "\n\\endhead\n", first_foot, '\\endfoot\n\\endlastfoot\n')   # for some reason it only worked when putting the tablabel inbetween the headers
+### Set up input to add row function:
+addtorow <- list()
+addtorow$pos <- list(0)  # insert at the beginning 
+if(TRUE){   # Set to false to not have different subsequent headers/footers
+  addtorow$command <- repeat_header_comm
+}else{
+  addtorow$command <- ''
+}
+### Print table:
+xtbl_prnt <- print(dxtbl, 
+      include.rownames = FALSE,   # Best to never include and just add as additional column if I want to show them
+      hline.after = -1:(nrow(d)-1), 
+      tabular.environment = 'longtable',    # Requires longtable package!
+      floating = FALSE, 
+      sanitize.text.function = function(x){x}, 
+      caption.placement='top', add.to.row = addtorow)
+#' sanitize functions define how xtable deals with \-slashes. Per default they are turned into text slashes so they lose their meaning as latex commands. If I want to have latex commands in my strings, I need to create a function which does not change them (as done above). There is also a specific sanitize.rownames.function (and colnames) function.
+@
+<<echo=FALSE, results='asis'>>=
+#' This is a second chunk to actually print the table. In the previous chunk I only
+#' created the latex code for it without printing the results. This is because 
+#' I want to directly make changes on the latex code before printing.
+### Insert caption and label manually:
+if(cpt_pos=='top'){
+   xtbl_prnt <- gsub(pattern = '(begin\\{longtable\\}\\{[^\\}]*\\}\n)', replacement = paste0('\\1', lbl_cpt), x = xtbl_prnt)
+}else if(cpt_pos=='bottom'){
+  xtbl_prnt <- gsub(pattern = '(\\\\end\\{longtable)', replacement = paste0(lbl_cpt, '\\1'), x = xtbl_prnt)
+}
+### Print table:
+cat(xtbl_prnt)
+@
+
+

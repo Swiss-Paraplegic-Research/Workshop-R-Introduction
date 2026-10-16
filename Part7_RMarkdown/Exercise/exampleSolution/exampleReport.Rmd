@@ -1,0 +1,153 @@
+---
+title: "Smoking Behavior in Youths"
+author: "Yannick Rothacher"
+date: "`r Sys.Date()`"
+output: bookdown::word_document2   # Alternatively use pdf_document2 or html_document2
+lang: en-US
+bibliography: refs.bib
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = FALSE)
+
+
+### This is how one can add a figure:
+# ```{r FIGLABEL, out.width = "100%", fig.cap="CAPTION", echo=FALSE}
+# plot(1:5)
+# ### Or from file:
+# include_graphics(path = "./FILENAME.PNG")
+# ```
+#
+# Crossref: \@ref(fig:FIGLABEL)
+
+
+### For tables use kable function:
+# ```{r TABLABEL, echo=FALSE}
+# kable(head(iris),
+#   caption = "CAPTION")
+# ```
+#
+# Crossref: \@ref(tab:TABLABEL)
+```
+
+
+```{r, include=FALSE}
+### Read in data:
+d0 <- read.csv('./FINLAND_12.csv')
+### Extract needed columns:
+d <- d0[, c("CR40", "OR15", "OR16", "CR2")]
+### Preprocess variables:
+### Sex:
+d$sex <- factor(d$CR2, levels = 1:2, labels = c('male', 'female'))
+d$CR2 <- NULL
+### Smoking intention:
+d$intention2smoke <- factor(d$CR40, levels = 1:4, labels = c('no', 'no', 'yes', 'yes'))
+d$CR40 <- NULL
+### Parents smoke:
+d$father_smoke <- factor(d$OR15, levels = c(1,2,3,4), labels = c('no', 'yes', 'yes', 'no'))
+d$OR15 <- NULL
+d$mother_smoke <- factor(d$OR16, levels = c(1,2,3,4), labels = c('no', 'yes', 'yes', 'no'))
+d$OR16 <- NULL
+### Any of the two:
+d$parents_smoke <- NA
+inds <- d$father_smoke=='yes' | d$mother_smoke=='yes'
+d$parents_smoke[inds] <- 'yes'
+d$parents_smoke[!inds] <- 'no'
+d$parents_smoke <- factor(d$parents_smoke)
+```
+
+
+
+
+
+# Introduction
+
+In this report, we will analyze data from the Global Youth Tobacco Survey which has been used extensively to investigate different aspects of smoking behavior in youths [see for example @sun2022prevalence]. In this report we focus on the data from Finland which contains `r nrow(d)` observations about the intention of youths to smoke in the upcoming 12 months. The data contains records of `r table(d$sex)['male']` male and `r table(d$sex)['female']` female youths.
+
+Detailed information about the questionnaire's variables can be found [here](https://extranet.who.int/ncdsmicrodata/index.php/catalog/532/data-dictionary/F1?file_name=FINLAND_12). We are interested in examining whether the presence of smoking parents is related to the intention of smoking in the upcoming twelve months.
+
+
+# Relationship between smoking parents and intention to smoke
+
+## Statistical analysis
+
+To investigate the relationship between the presence of smoking parents and the intention to smoke in the upcoming 12 months, a Chi-squared test was conducted. Table \@ref(tab:twobytwo) presents the corresponding 2x2 table.
+
+```{r twobytwo}
+### Frequency table:
+tbl <- table('Intention to smoke'=d$intention2smoke, 'Parents smoke'=d$parents_smoke)
+### Make names nicer:
+nms <- names(dimnames(tbl))   # Get names
+rownames(tbl) <- paste(nms[1], rownames(tbl), sep = ': ')
+colnames(tbl) <- paste(nms[2], colnames(tbl), sep = ': ')
+### Print table:
+kable(tbl, caption = "Frequency table of the two investigated variables.")
+```
+
+```{r}
+### Run chi square test:
+chi <- chisq.test(tbl)
+### Create table:
+### Show p-value only if not too small:
+p <- ifelse(chi$p.value < 0.001, yes = '< 0.001', no = round(chi$p.value, 2))
+chitbl <- data.frame('Value'=round(chi$statistic, 1), 'df'=chi$parameter, 'p-value'=p)
+```
+
+
+The result of the Chi-squared test revealed a significant association between the two variables (see Table \@ref(tab:chitbl)).
+
+```{r chitbl}
+kable(chitbl, caption = "Test statistic and p-value of the Chi-squared test.")
+```
+
+## Data visualization
+
+Figure \@ref(fig:brplot) visualizes the relationship between smoking parents and the intention to smoke in a grouped barplot. Alternatively, Figure \@ref(fig:pieplot) presents the same information as pie charts.
+
+```{r mkplots, include=FALSE}
+### Create figures:
+### Barplot:
+jpeg(filename = './barplot.jpeg', width = 15, height = 10, 
+     units = 'cm', pointsize = 10, res = 300)
+cls <- c('darkgrey', 'red')
+barplot(tbl, beside = TRUE, col=cls, xlab='Intention to smoke', ylab='Number of cases')
+legend('topright', legend = levels(d$parents_smoke), title = 'Parents smoke:', col = cls, pch=15)
+dev.off()
+### Pie chart:
+jpeg(filename = './pieplots.jpeg', width = 15, height = 10, units = 'cm', pointsize = 10, res = 300)
+par(mfrow=c(1,2))
+pie(table(d$intention2smoke[d$parents_smoke=='no']), main = 'Intention to smoke\n(no smoking parents)')
+pie(table(d$intention2smoke[d$parents_smoke=='yes']), main = 'Intention to smoke\n(with smoking parents)')
+dev.off()
+```
+
+
+
+```{r brplot, out.width = "100%", fig.cap="Grouped barplot showing the relationship between the presence of smoking parents and the intention to smoke.", echo=FALSE}
+### Barplot:
+include_graphics(path = "./barplot.jpeg")
+```
+
+
+
+```{r pieplot, out.width = "100%", fig.cap="Pie charts showing the relationship between the presence of smoking parents and the intention to smoke.", echo=FALSE}
+### Pieplots:
+include_graphics(path = "./pieplots.jpeg")
+```
+
+
+
+# References
+
+
+
+
+
+
+
+
+
+

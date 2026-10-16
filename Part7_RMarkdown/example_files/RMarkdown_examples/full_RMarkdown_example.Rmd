@@ -1,0 +1,112 @@
+---
+title: "full_RMarkdown_example"
+author: "Yannick Rothacher"
+date: "`r Sys.Date()`"
+output: bookdown::word_document2
+lang: en-US
+bibliography: example.bib
+csl: nature.csl
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+opts_chunk$set(echo = TRUE)
+
+### This is how one can add a figure:
+# ```{r FIGLABEL, out.width = "100%", fig.cap="CAPTION", echo=FALSE}
+# plot(1:5)
+# ### Or from file:
+# include_graphics(path = "./FILENAME.PNG")
+# ```
+#
+# Crossref: \@ref(fig:FIGLABEL)
+
+
+### For tables use kable function:
+# ```{r TABLABEL, echo=FALSE}
+# kable(head(iris),
+#   caption = "CAPTION")
+# ```
+#
+# Crossref: \@ref(tab:TABLABEL)
+```
+
+
+# First section
+
+This is another example of using RMarkdown. Lets look at the following analysis:
+
+```{r}
+lmfit <- lm(Sepal.Length ~ Species, data = iris)
+summary(lmfit)
+```
+
+## Results in a table
+
+We want to show the results in a table. We can print R data frames (or matrices) as tables:
+
+```{r coeftable, echo=FALSE}
+### Get the coefficients as table:
+sumy <- summary(lmfit)
+coeftbl <- sumy$coefficients
+coeftbl <- apply(coeftbl, 2, round, digits=2)
+kable(coeftbl, caption = 'Results of my linear model.')
+```
+
+As you can see in Table \@ref(tab:coeftable), the results show...
+
+
+## Adding a figure
+
+Figure \@ref(fig:boxplot) shows a boxplot of the iris data.
+
+```{r boxplot, out.width = "100%", fig.cap="iris data boxplot.", echo=FALSE}
+### Look at data:
+boxplot(Sepal.Length ~ Species, data = iris)
+```
+
+# Adding a figure from a file
+
+```{r, echo=FALSE, results='hide'}
+### Create figure file:
+jpeg(filename = './boxplot.jpeg', width = 10, height = 10, units = 'cm', 
+     pointsize = 10, res = 300)
+boxplot(Sepal.Length ~ Species, data = iris, col='blue')
+dev.off()
+```
+
+
+```{r boxplotfile, out.width = "100%", fig.cap="Again an iris boxplot.", echo=FALSE}
+### Insert file:
+include_graphics(path = "./boxplot.jpeg")
+```
+
+This is Figure \@ref(fig:boxplotfile).
+
+
+# Adding references
+As shown in a recent study [@zakharova2026pressure], it is highly unlikely that.
+
+There were two other studies [@zakharova2026pressure; @tanabe1996diversity] which showed that.
+
+In yet another study, @zakharova2026pressure showed that.
+
+
+
+# References
+
+
+
+
+
+
+
+
+
+
+
+
+
+
